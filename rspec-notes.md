@@ -148,6 +148,81 @@ context 'with a veggie preference' do
   end
 end
 ```
+## Hooks and Tags
+
+**Before Hook**
+```ruby
+describe Zombie do let(:zombie) { Zombie.new }
+  before { zombie.hungry! } #applies before all tests and within all contexts
+  it 'is hungry' do
+    zombie.should be_hungry
+  end
+  it 'craves brains' do
+    zombie.should be_craving_brains
+  end
+  context 'with a veggie preference' do
+    before {zombie.vegetarian = true} # applied within context
+
+    it 'still craves brains' do
+      #zombie.vegetarian = true (refactored)
+      #...
+    end
+    it 'craves vegan brains' do
+      #zombie.vegetarian = true (refactored)
+      #...
+    end
+  end
+end
+```
+
+**Shared Examples**  
+
+```ruby
+# in spec/models/zombie_spec.rb
+ describe Zombie do
+   # zombie = Zombie.new
+   it_behaves_like 'the undead'# refactored from zombie.pulse.should == false
+end
+
+# in spec/models/vampire_spec.rb
+ describe Vampire do
+   # vampire = Vampire.new
+   it_behaves_like 'the undead' # refactored from vampire.pulse.should == false
+end
+
+#used to call shared examples
+# in spec/support/shared_examples_for_undead.rb
+shared_examples_for 'the undead' do
+   it 'does not have a pulse' do
+     subject.pulse.should == false # subject used to apply to what calls it
+   end
+end
+```
+
+**Test Tag**
+Tags can be added to tests to differentiate what tests you want to run such as in the it block, set `focus: true` or `slow: true` so that they can be excluded when running.  Example:
+
+`context 'with a smart zombie', focus: true do ...`
+
+Running them from the command line with
+
+`$ rspec --tag focus spec/lib/zombie_spec.rb`
+
+to filter them out
+
+`$ rspec --tag ~focus spec/lib/zombie_spec.rb`
+
+## Mocking and Stubbing
+
+Definitions:  
+> * *Stub*
+  * For replacing a method with code that returns a specifed result.
+* *Mock*
+  * A stub with an expectations that the method gets called.
+
+`let(:zombie) { stub(:zombie, email: 'anything@example.org') }` stub format
+
+
 
 
 
