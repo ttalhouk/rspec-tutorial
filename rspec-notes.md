@@ -103,6 +103,57 @@ $ rspec spec/models/zombie_spec.rb:4
 * `be_an_instance_of(class)` checks type of class
 
 
+## Organizing examples
+
+Instantiating a new object using subject.  This creates a new object using the class provided in the describe block. Rspec doesn't require using subject, it will infer it if none are provided. So...
+
+```ruby
+describe Zombie do
+  it 'responds to name' do
+    should respond_to(:name) # assumes Zombie.new
+  end
+end
+
+# this can be shortend to
+
+describe Zombie do
+  it { should respond_to(:name) } # Will output readable results
+end
+
+# likewise
+describe Zombie do
+  it { subject.name.should == 'Ash' }
+end
+
+# can be written
+describe Zombie do
+  its(:name) { should_be 'Ash' }
+
+  # other test formats
+  its(:weapons) { should include(weapon) }
+  its(:brain) { should be_nil }
+  its('tweets.size') { should == 2 }
+end
+```
+
+When using a subject, and using let blocks
+```ruby
+context 'with a veggie preference' do
+  subject (:zombie) { Zombie.new(vegetarian: true, weapons: [axe]) }
+  let(:axe) { Weapon.new(name: 'axe') }
+
+    its(:weapons) { should include(axe) } # refers to subject
+    it 'can use its axe' do
+      zombie.swing(axe).should == true # zombie is alias for subject
+  end
+end
+```
+
+
+
+
+
+
 
 
 ***Note: Using should is deprecated, to use install `shoulda` gem***
