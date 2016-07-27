@@ -222,8 +222,84 @@ Definitions:
 
 `let(:zombie) { stub(:zombie, email: 'anything@example.org') }` stub format
 
+## Creating Custom Matchers
 
+If there is a test (such as validation) that gets used a lot consider making a custom matcher for it.  Custom matchers are placed in the support folder in modules.  
 
+```ruby
+# in zombie_spec.rb
+describe Zombie do
+  it 'validates presence of name' do
+    zombie = Zombie.new(name: nil)
+    zombie.should validate_presence_of_name
+    # Validation can be used more than just for zombie class so good to creates
+    # custom matcher for it
+  end
+end
+
+# in support folder create module for validate_presence_of_name.rb
+module ValidatePresenceOfName
+  class Matcher
+     def matches?(model)
+      model.valid?
+      model.errors.has_key?(:name)
+    end
+  end
+  def validate_presence_of_name
+    Matcher.new
+  end
+end
+RSpec.configure do |config|
+  config.include ValidatePresenceOfName, type: :model #available to model specs only
+end
+```
+
+This can be improved so it can validate multiple attributes like so
+
+```ruby
+describe Zombie do
+  it 'validates presence of name' do
+    zombie = Zombie.new(name: nil)
+    zombie.should validate_presence_of(:name) # add attribute for Validation
+  end
+end
+
+# update custom matcher to take attribute arguments
+
+module ValidatePresenceOf
+   class Matcher
+     def initialize(attribute)
+       @attribute = attribute
+     end
+     def matches?(model)
+       model.valid?
+       model.errors.has_key?(@attribute)
+     end
+   end
+   def validate_presence_of(attribute) # takes attribute and makes Matcher for it
+     Matcher.new(attribute)
+   end
+end
+```
+**Adding Failure Message to Custom Matcher**
+
+```ruby
+module ValidatePresenceOf
+  class Matcher
+    def matches?(model)
+       @model = model
+       @model.valid?
+       @model.errors.has_key?(@attribute)
+     end
+    def failure_message
+      "#{@model.class} failed to validate :#{@attribute} presence."
+    end
+    def negative_failure_message
+      "#{@model.class} validated :#{@attribute} presence."
+    end
+  end
+end
+```
 
 
 
